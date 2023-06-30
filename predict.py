@@ -24,8 +24,6 @@ class Predictor(BasePredictor):
         )
         if self.tokenizer.pad_token_id is None:
             self.tokenizer.pad_token = self.tokenizer.eos_token
-        self.tokenizer.padding_side = "left"
-        self.model.eval()
         self.model.to(device, dtype=torch.bfloat16)
 
     def predict(self,
@@ -35,12 +33,11 @@ class Predictor(BasePredictor):
     ) -> str:    
         input_ids = self.tokenizer.encode(prompt, return_tensors="pt")
         input_ids = input_ids.to(device)
-        with torch.no_grad():
-            output_ids = self.model.generate(
-                input_ids,
-                max_new_tokens=max_new_tokens,
-                temperature=temperature
+        output_ids = self.model.generate(
+            input_ids,
+            max_new_tokens=max_new_tokens,
+            temperature=temperature
             )
-        new_tokens = output_ids[0, len(input_ids[0]) :]
+        new_tokens = output_ids[0]
         output = self.tokenizer.decode(new_tokens, skip_special_tokens=True)
         return output
